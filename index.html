@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayComputer - Documentação & Menu</title>
+    <style>
+        :root {
+            --bg-color: #0d0f12;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --primary: #7c3aed;
+            --primary-hover: #6d28d9;
+            --accent: #06b6d4;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        header {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            background: linear-gradient(180deg, rgba(124, 58, 237, 0.15) 0%, rgba(13, 15, 18, 0) 100%);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 3rem;
+            border-radius: 12px;
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(90deg, #a78bfa, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .author {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+        }
+
+        .author span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            font-style: italic;
+            color: var(--text-main);
+            margin-bottom: 2rem;
+        }
+
+        .btn-transpiler {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 0.85rem 2rem;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-transpiler:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(6, 182, 212, 0.5);
+        }
+
+        /* SEÇÕES & GRID */
+        .section-title {
+            font-size: 1.6rem;
+            margin: 2.5rem 0 1.5rem 0;
+            color: var(--accent);
+            border-left: 4px solid var(--primary);
+            padding-left: 0.75rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* CARDS */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .keyword-name {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 1.2rem;
+            color: #a78bfa;
+            font-weight: 700;
+        }
+
+        .category-badge {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .card-desc strong {
+            color: var(--text-main);
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.88rem;
+            color: #22d3ee;
+            overflow-x: auto;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HEADER PRINCIPAL -->
+        <header>
+            <h1 class="title">PlayComputer</h1>
+            <p class="author">Criado por <span>Yudhi Gerson</span></p>
+            <p class="tagline">"Aqui é composição, não programação!"</p>
+            <a href="transpilador.html" class="btn-transpiler">🚀 Abrir Transpilador</a>
+        </header>
+
+        <!-- ESTRUTURA GLOBAL -->
+        <h2 class="section-title">1. Configuração Global e Estrutura</h2>
+        <div class="grid">
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">compass</span>
+                        <span class="category-badge">Global</span>
+                    </div>
+                    <p class="card-desc">Define a métrica de tempo/compasso da composição. Utilizado obrigatoriamente no topo do código.</p>
+                </div>
+                <pre>compass 4/4\ncompass standard // Usa 4/4</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">scale</span>
+                        <span class="category-badge">Global</span>
+                    </div>
+                    <p class="card-desc">Define a tonalidade e a escala base (major/minor). O padrão do sistema é Dó Maior (C major).</p>
+                </div>
+                <pre>scale C major\nscale A minor</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">bpm</span>
+                        <span class="category-badge">Global</span>
+                    </div>
+                    <p class="card-desc">Configura o andamento da música em batidas por minuto (Beats Per Minute). Padrão: 120 BPM.</p>
+                </div>
+                <pre>bpm 140</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">metronome</span>
+                        <span class="category-badge">Global</span>
+                    </div>
+                    <p class="card-desc">Ativa ou desativa a guia sonora do metrônomo (padrão <i>TIC tac tac tac</i>) durante a execução.</p>
+                </div>
+                <pre>metronome active\nmetronome unactive</pre>
+            </div>
+        </div>
+
+        <!-- EXECUÇÃO E SINTAXE -->
+        <h2 class="section-title">2. Comandos de Execução e Nota</h2>
+        <div class="grid">
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">play</span>
+                        <span class="category-badge">Execução</span>
+                    </div>
+                    <p class="card-desc">Instrução principal para emitir notas ou blocos num canal/instrumento específico. Se o instrumento for omitido, assume <code>piano</code>.</p>
+                </div>
+                <pre>play standard note(1)\nplay synthBass note(1)</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">note()</span>
+                        <span class="category-badge">Função</span>
+                    </div>
+                    <p class="card-desc">Representa o grau da nota na escala ativa (1 a 7). Aceita modificadores de tom e oitava.</p>
+                </div>
+                <pre>note(1^[8++]) // C#6 na escala C</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">chord()</span>
+                        <span class="category-badge">Função</span>
+                    </div>
+                    <p class="card-desc">Executa múltiplas notas simultaneamente para gerar acordes harmônicos.</p>
+                </div>
+                <pre>chord(1, 3, 5) // Triada de Dó Maior</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">rhythm()</span>
+                        <span class="category-badge">Função</span>
+                    </div>
+                    <p class="card-desc">Métrica de duração da nota (1 = Semibreve, 2 = Mínima, 4 = Semínima, 8 = Colcheia, 16 = Semicolcheia). Suporta pausa.</p>
+                </div>
+                <pre>note(1) rhythm(4)\nrhythm(pause 4)</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">part { }</span>
+                        <span class="category-badge">Bloco</span>
+                    </div>
+                    <p class="card-desc">Agrupa uma sequência de instruções de um mesmo canal em um bloco estruturado, dispensando vírgulas excessivas.</p>
+                </div>
+                <pre>play standard part {\n    note(1) rhythm(1),\n    note(2) rhythm(1)\n}</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">= (Variáveis)</span>
+                        <span class="category-badge">Atribuição</span>
+                    </div>
+                    <p class="card-desc">Armazena notas, acordes, números ou trechos em identificadores para reaproveitamento no arranjo.</p>
+                </div>
+                <pre>base = note(1)\nplay standard base</pre>
+            </div>
+        </div>
+
+        <!-- FLUXO E ATRIBUTOS -->
+        <h2 class="section-title">3. Controle de Fluxo, Atributos e Loops</h2>
+        <div class="grid">
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">atribute { }</span>
+                        <span class="category-badge">Atributo</span>
+                    </div>
+                    <p class="card-desc">Declara metadados de identificação (<code>id</code> e <code>class</code>) no início do bloco de uma parte.</p>
+                </div>
+                <pre>atribute {\n    id = "baixo"\n    class = "groove"\n}</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">escape(n)</span>
+                        <span class="category-badge">Sincronismo</span>
+                    </div>
+                    <p class="card-desc">Aplica um deslocamento temporal (delay) de <i>n</i> semínimas para evitar colisão e alinhar execuções concorrentes.</p>
+                </div>
+                <pre>#baixo.escape(2)</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">repeat(n)</span>
+                        <span class="category-badge">Loop</span>
+                    </div>
+                    <p class="card-desc">Reaplica um canal por ID ou um bloco polifônico completo <i>n</i> vezes sequencialmente.</p>
+                </div>
+                <pre>#trecho.repeat(4)\nrepeat(2) {\n    #trecho\n    #baixo.escape(2)\n}</pre>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">tone()</span>
+                        <span class="category-badge">Modificador</span>
+                    </div>
+                    <p class="card-desc">Aplica transposição de afinação (v, vv, ^, ^^) sobre uma parte inteira referenciada.</p>
+                </div>
+                <pre>#trecho.tone(^)</pre>
+            </div>
+        </div>
+
+        <!-- Mapeamento Drum -->
+        <h2 class="section-title">4. Percussão Irregular (drum)</h2>
+        <div class="grid">
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <span class="keyword-name">drum</span>
+                        <span class="category-badge">Instrumento</span>
+                    </div>
+                    <p class="card-desc">Canal percussivo onde os índices de <code>note(n)</code> disparam elementos do kit de bateria:</p>
+                    <p class="card-desc" style="font-size:0.85rem;">
+                        <b>1</b>: Bumbo (BOOM) | <b>2</b>: Surdo | <b>3</b>: Tom-Tom | <b>4</b>: Caixa | <b>5</b>: Abafo | <b>6</b>: Chimbal Fechado | <b>7</b>: Prato de Ataque | <b>8/9</b>: Caixas Aguda/Grave
+                    </p>
+                </div>
+                <pre>play drum part {\n    note(1) rhythm(8), // Bumbo\n    note(6) rhythm(8)  // Chimbal\n}</pre>
+            </div>
+        </div>
+
+        <footer>
+            <p>PlayComputer DSL &copy; 2026 — Arquitetura de Áudio e Compiladores por Yudhi Gerson</p>
+        </footer>
+    </div>
+
+</body>
+</html>
+
