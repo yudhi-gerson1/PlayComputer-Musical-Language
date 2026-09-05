@@ -167,6 +167,7 @@
             font-size: 0.88rem;
             color: #22d3ee;
             overflow-x: auto;
+            white-space: pre-wrap;
         }
 
         /* FOOTER */
@@ -202,7 +203,8 @@
                     </div>
                     <p class="card-desc">Define a métrica de tempo/compasso da composição. Utilizado obrigatoriamente no topo do código.</p>
                 </div>
-                <pre>compass 4/4\ncompass standard // Usa 4/4</pre>
+                <pre>compass 4/4
+compass standard // Usa 4/4</pre>
             </div>
 
             <div class="card">
@@ -213,7 +215,8 @@
                     </div>
                     <p class="card-desc">Define a tonalidade e a escala base (major/minor). O padrão do sistema é Dó Maior (C major).</p>
                 </div>
-                <pre>scale C major\nscale A minor</pre>
+                <pre>scale C major
+scale A minor</pre>
             </div>
 
             <div class="card">
@@ -235,7 +238,8 @@
                     </div>
                     <p class="card-desc">Ativa ou desativa a guia sonora do metrônomo (padrão <i>TIC tac tac tac</i>) durante a execução.</p>
                 </div>
-                <pre>metronome active\nmetronome unactive</pre>
+                <pre>metronome active
+metronome unactive</pre>
             </div>
         </div>
 
@@ -250,7 +254,8 @@
                     </div>
                     <p class="card-desc">Instrução principal para emitir notas ou blocos num canal/instrumento específico. Se o instrumento for omitido, assume <code>piano</code>.</p>
                 </div>
-                <pre>play standard note(1)\nplay synthBass note(1)</pre>
+                <pre>play standard note(1)
+play synthBass note(1)</pre>
             </div>
 
             <div class="card">
@@ -283,7 +288,8 @@
                     </div>
                     <p class="card-desc">Métrica de duração da nota (1 = Semibreve, 2 = Mínima, 4 = Semínima, 8 = Colcheia, 16 = Semicolcheia). Suporta pausa.</p>
                 </div>
-                <pre>note(1) rhythm(4)\nrhythm(pause 4)</pre>
+                <pre>note(1) rhythm(4)
+rhythm(pause 4)</pre>
             </div>
 
             <div class="card">
@@ -294,7 +300,10 @@
                     </div>
                     <p class="card-desc">Agrupa uma sequência de instruções de um mesmo canal em um bloco estruturado, dispensando vírgulas excessivas.</p>
                 </div>
-                <pre>play standard part {\n    note(1) rhythm(1),\n    note(2) rhythm(1)\n}</pre>
+                <pre>play standard part {
+    note(1) rhythm(1),
+    note(2) rhythm(1)
+}</pre>
             </div>
 
             <div class="card">
@@ -305,7 +314,8 @@
                     </div>
                     <p class="card-desc">Armazena notas, acordes, números ou trechos em identificadores para reaproveitamento no arranjo.</p>
                 </div>
-                <pre>base = note(1)\nplay standard base</pre>
+                <pre>base = note(1)
+play standard base</pre>
             </div>
         </div>
 
@@ -320,7 +330,10 @@
                     </div>
                     <p class="card-desc">Declara metadados de identificação (<code>id</code> e <code>class</code>) no início do bloco de uma parte.</p>
                 </div>
-                <pre>atribute {\n    id = "baixo"\n    class = "groove"\n}</pre>
+                <pre>atribute {
+    id = "baixo"
+    class = "groove"
+}</pre>
             </div>
 
             <div class="card">
@@ -342,7 +355,11 @@
                     </div>
                     <p class="card-desc">Reaplica um canal por ID ou um bloco polifônico completo <i>n</i> vezes sequencialmente.</p>
                 </div>
-                <pre>#trecho.repeat(4)\nrepeat(2) {\n    #trecho\n    #baixo.escape(2)\n}</pre>
+                <pre>#trecho.repeat(4)
+repeat(2) {
+    #trecho
+    #baixo.escape(2)
+}</pre>
             </div>
 
             <div class="card">
@@ -371,7 +388,10 @@
                         <b>1</b>: Bumbo (BOOM) | <b>2</b>: Surdo | <b>3</b>: Tom-Tom | <b>4</b>: Caixa | <b>5</b>: Abafo | <b>6</b>: Chimbal Fechado | <b>7</b>: Prato de Ataque | <b>8/9</b>: Caixas Aguda/Grave
                     </p>
                 </div>
-                <pre>play drum part {\n    note(1) rhythm(8), // Bumbo\n    note(6) rhythm(8)  // Chimbal\n}</pre>
+                <pre>play drum part {
+    note(1) rhythm(8), // Bumbo
+    note(6) rhythm(8)  // Chimbal
+}</pre>
             </div>
         </div>
 
