@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlayComputer - Documentação & Menu</title>
+    <title>PlayComputer - Guia Fácil de Composição</title>
     <style>
         :root {
-            --bg-color: #0d0f12;
-            --card-bg: #161b22;
-            --border-color: #30363d;
-            --primary: #7c3aed;
-            --primary-hover: #6d28d9;
+            --bg-color: #0b0f17;
+            --card-bg: #161f2e;
+            --border-color: #233145;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
             --accent: #06b6d4;
             --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --code-bg: #0d1117;
+            --text-muted: #9ba3af;
+            --code-bg: #0d131f;
+            --highlight: #f59e0b;
         }
 
         * {
@@ -32,7 +33,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1100px;
             margin: 0 auto;
         }
 
@@ -40,16 +41,15 @@
         header {
             text-align: center;
             padding: 3rem 1.5rem;
-            background: linear-gradient(180deg, rgba(124, 58, 237, 0.15) 0%, rgba(13, 15, 18, 0) 100%);
+            background: radial-gradient(circle at top, rgba(139, 92, 246, 0.2) 0%, rgba(11, 15, 23, 0) 70%);
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 3rem;
-            border-radius: 12px;
+            margin-bottom: 2.5rem;
+            border-radius: 16px;
         }
 
         .title {
-            font-size: 3rem;
+            font-size: 3.2rem;
             font-weight: 800;
-            letter-spacing: -1px;
             background: linear-gradient(90deg, #a78bfa, #22d3ee);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -59,7 +59,7 @@
         .author {
             font-size: 1.1rem;
             color: var(--text-muted);
-            margin-bottom: 0.8rem;
+            margin-bottom: 1rem;
         }
 
         .author span {
@@ -68,8 +68,7 @@
         }
 
         .tagline {
-            font-size: 1.25rem;
-            font-style: italic;
+            font-size: 1.3rem;
             color: var(--text-main);
             margin-bottom: 2rem;
         }
@@ -80,92 +79,77 @@
             color: #fff;
             font-weight: 700;
             text-decoration: none;
-            padding: 0.85rem 2rem;
-            border-radius: 8px;
-            font-size: 1.05rem;
+            padding: 1rem 2.2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
             transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
         }
 
         .btn-transpiler:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(6, 182, 212, 0.5);
+            box-shadow: 0 6px 28px rgba(6, 182, 212, 0.5);
         }
 
-        /* SEÇÕES & GRID */
+        /* BLOCOS DE UX */
         .section-title {
-            font-size: 1.6rem;
-            margin: 2.5rem 0 1.5rem 0;
+            font-size: 1.8rem;
+            margin: 3rem 0 1.2rem 0;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quickstart-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(6, 182, 212, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 1.8rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .quickstart-box h3 {
             color: var(--accent);
-            border-left: 4px solid var(--primary);
-            padding-left: 0.75rem;
+            margin-bottom: 0.8rem;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .instruments-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .inst-card {
+        /* TABELAS FACILITADAS */
+        .simple-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
             background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-            transition: border-color 0.2s, transform 0.2s;
+            overflow: hidden;
         }
 
-        .inst-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
+        .simple-table th, .simple-table td {
+            padding: 0.85rem 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .inst-name {
-            font-family: 'Fira Code', 'Consolas', monospace;
-            font-size: 1.1rem;
-            color: #22d3ee;
-            font-weight: 700;
-            margin-bottom: 0.3rem;
-        }
-
-        .inst-type {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .info-box {
-            background-color: rgba(6, 182, 212, 0.08);
-            border: 1px solid rgba(6, 182, 212, 0.3);
-            border-radius: 8px;
-            padding: 1rem 1.2rem;
-            font-size: 0.95rem;
-            color: var(--text-main);
-            margin-bottom: 1.5rem;
+        .simple-table th {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--accent);
         }
 
         /* CARDS */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
         .card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 1.5rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: border-color 0.2s, transform 0.2s;
-        }
-
-        .card:hover {
-            border-color: var(--primary);
-            transform: translateY(-3px);
         }
 
         .card-header {
@@ -182,14 +166,13 @@
             font-weight: 700;
         }
 
-        .category-badge {
+        .badge {
             font-size: 0.75rem;
-            text-transform: uppercase;
-            padding: 0.25rem 0.6rem;
-            border-radius: 4px;
-            background-color: rgba(255, 255, 255, 0.05);
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            background-color: rgba(6, 182, 212, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(6, 182, 212, 0.3);
         }
 
         .card-desc {
@@ -198,20 +181,25 @@
             margin-bottom: 1rem;
         }
 
-        .card-desc strong {
-            color: var(--text-main);
-        }
-
         pre {
             background-color: var(--code-bg);
             border: 1px solid var(--border-color);
-            padding: 0.75rem;
-            border-radius: 6px;
+            padding: 0.9rem;
+            border-radius: 8px;
             font-family: 'Fira Code', 'Consolas', monospace;
             font-size: 0.88rem;
             color: #22d3ee;
-            overflow-x: auto;
             white-space: pre-wrap;
+        }
+
+        .tip-box {
+            background-color: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--highlight);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #fde68a;
         }
 
         /* FOOTER */
@@ -232,262 +220,191 @@
         <header>
             <h1 class="title">PlayComputer</h1>
             <p class="author">Criado por <span>Yudhi Gerson</span></p>
-            <p class="tagline">"Aqui é composição, não programação!"</p>
-            <a href="transpilador.html" class="btn-transpiler">🚀 Abrir Transpilador</a>
+            <p class="tagline">"Componha músicas incríveis escrevendo textos simples!"</p>
+            <a href="transpilador.html" class="btn-transpiler">🎵 Abrir o Criador de Música</a>
         </header>
 
-        <!-- NOVELTY: INSTRUMENTOS SUPORTADOS -->
-        <h2 class="section-title">1. Instrumentos Suportados</h2>
-        
-        <div class="info-box">
-            🎹 <b>Nota Importante:</b> Caso o instrumento não seja explicitamente especificado na instrução <code>play</code> ou use a palavra-chave <code>standard</code>, o compilador atribuirá automaticamente o instrumento <b>piano</b> como padrão.
+        <!-- PRIMEIRA MÚSICA EM 1 MINUTO -->
+        <div class="quickstart-box">
+            <h3>🚀 Sua primeira música em 10 segundos</h3>
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">
+                Você não precisa entender de teoria musical! Copie o código abaixo, cole no transpilador e aperte o Play:
+            </p>
+            <pre>compass standard
+scale C major
+bpm 120
+
+// Toca uma sequência simples de notas no piano
+play piano part {
+    note(1) rhythm(4), // Dó (duração normal)
+    note(3) rhythm(4), // Mi
+    note(5) rhythm(2)  // Sol (duração longa)
+}</pre>
         </div>
 
-        <div class="instruments-grid">
-            <div class="inst-card">
-                <div class="inst-name">piano</div>
-                <div class="inst-type">Teclado / Padrão</div>
-            </div>
-            <div class="inst-card">
-                <div class="inst-name">guitar</div>
-                <div class="inst-type">Corda Melódica</div>
-            </div>
-            <div class="inst-card">
-                <div class="inst-name">synthBass</div>
-                <div class="inst-type">Sintetizador Grave</div>
-            </div>
-            <div class="inst-card">
-                <div class="inst-name">guitarBass</div>
-                <div class="inst-type">Contrabaixo</div>
-            </div>
-            <div class="inst-card">
-                <div class="inst-name">synth</div>
-                <div class="inst-type">Sintetizador Agudo</div>
-            </div>
-            <div class="inst-card">
-                <div class="inst-name">organ</div>
-                <div class="inst-type">Órgão</div>
-            </div>
-            <div class="inst-card">
-                <div class="inst-name">accordeon</div>
-                <div class="inst-type">Sanfona / Acordeão</div>
-            </div>
-            <div class="inst-card">
-                <div class="inst-name">ukulele</div>
-                <div class="inst-type">Corda Leve</div>
-            </div>
-            <div class="inst-card">
-                <div class="inst-name">drum</div>
-                <div class="inst-type">Percussão (Irregular)</div>
-            </div>
+        <!-- PASSO 1: NOTAS MUSICAIS -->
+        <h2 class="section-title">1. As Notas Musicais (Super Fácil)</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+            No PlayComputer você usa números de <b>1 a 7</b> para escolher as notas da escala. Na escala padrão (Dó Maior), cada número representa uma nota do teclado:
+        </p>
+
+        <table class="simple-table">
+            <thead>
+                <tr>
+                    <th>Número na Linguagem</th>
+                    <th>Nota Musical</th>
+                    <th>Como Soa?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>note(1)</code></td><td>Dó (C)</td><td>Nota de início grave e estável</td></tr>
+                <tr><td><code>note(2)</code></td><td>Ré (D)</td><td>Um passo acima do Dó</td></tr>
+                <tr><td><code>note(3)</code></td><td>Mi (E)</td><td>Tom alegre e brilhante</td></tr>
+                <tr><td><code>note(4)</code></td><td>Fá (F)</td><td>Tom de transição</td></tr>
+                <tr><td><code>note(5)</code></td><td>Sol (G)</td><td>Nota marcante e forte</td></tr>
+                <tr><td><code>note(6)</code></td><td>Lá (A)</td><td>Nota suave</td></tr>
+                <tr><td><code>note(7)</code></td><td>Si (B)</td><td>Pede resolução (volta para o Dó)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="tip-box">
+            💡 <b>Quer mudar a altura da nota?</b><br>
+            • Para deixar mais aguda (sustenido): <code>note(1^)</code><br>
+            • Para tocar uma oitava mais alta (agudíssima): <code>note(1[8+])</code>
         </div>
 
-        <!-- ESTRUTURA GLOBAL -->
-        <h2 class="section-title">2. Configuração Global e Estrutura</h2>
+        <!-- PASSO 2: RITMO E DURAÇÃO -->
+        <h2 class="section-title">2. Ritmo: Quanto tempo a nota dura?</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+            Use a função <code>rhythm(número)</code> junto com a nota para definir a velocidade. Pense nos números como divisões do tempo:
+        </p>
+
         <div class="grid">
             <div class="card">
                 <div>
                     <div class="card-header">
-                        <span class="keyword-name">compass</span>
-                        <span class="category-badge">Global</span>
+                        <span class="keyword-name">rhythm(4)</span>
+                        <span class="badge">Batida Normal</span>
                     </div>
-                    <p class="card-desc">Define a métrica de tempo/compasso da composição. Utilizado obrigatoriamente no topo do código.</p>
+                    <p class="card-desc">É o tempo padrão (Semínima). Equivale a uma batida do seu coração ou um passo caminhando.</p>
                 </div>
-                <pre>compass 4/4
-compass standard // Usa 4/4</pre>
+                <pre>note(1) rhythm(4)</pre>
             </div>
 
             <div class="card">
                 <div>
                     <div class="card-header">
-                        <span class="keyword-name">scale</span>
-                        <span class="category-badge">Global</span>
+                        <span class="keyword-name">rhythm(1) e (2)</span>
+                        <span class="badge">Notas Longas</span>
                     </div>
-                    <p class="card-desc">Define a tonalidade e a escala base (major/minor). O padrão do sistema é Dó Maior (C major).</p>
+                    <p class="card-desc"><b>rhythm(1)</b> dura o bloco inteiro (4 batidas). <b>rhythm(2)</b> dura metade do bloco (2 batidas).</p>
                 </div>
-                <pre>scale C major
-scale A minor</pre>
+                <pre>note(1) rhythm(1) // Segura o som bastante!</pre>
             </div>
 
             <div class="card">
                 <div>
                     <div class="card-header">
-                        <span class="keyword-name">bpm</span>
-                        <span class="category-badge">Global</span>
+                        <span class="keyword-name">rhythm(8) e (16)</span>
+                        <span class="badge">Notas Rápidas</span>
                     </div>
-                    <p class="card-desc">Configura o andamento da música em batidas por minuto (Beats Per Minute). Padrão: 120 BPM.</p>
+                    <p class="card-desc">Ideais para solos e ritmos acelerados. A nota toca bem rapidinho.</p>
                 </div>
-                <pre>bpm 140</pre>
+                <pre>note(1) rhythm(8)</pre>
             </div>
 
             <div class="card">
                 <div>
                     <div class="card-header">
-                        <span class="keyword-name">metronome</span>
-                        <span class="category-badge">Global</span>
+                        <span class="keyword-name">rhythm(pause n)</span>
+                        <span class="badge">Silêncio / Pausa</span>
                     </div>
-                    <p class="card-desc">Ativa ou desativa a guia sonora do metrônomo (padrão <i>TIC tac tac tac</i>) durante a execução.</p>
+                    <p class="card-desc">Faz o instrumento ficar em silêncio por um tempo antes de tocar a próxima nota.</p>
                 </div>
-                <pre>metronome active
-metronome unactive</pre>
+                <pre>rhythm(pause 4) // Pausa de 1 batida</pre>
             </div>
         </div>
 
-        <!-- EXECUÇÃO E SINTAXE -->
-        <h2 class="section-title">3. Comandos de Execução e Nota</h2>
+        <!-- PASSO 3: INSTRUMENTOS -->
+        <h2 class="section-title">3. Escolhendo o Instrumento</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+            Você escolhe o som escrevendo o nome do instrumento logo após o comando <code>play</code>. Se não escrever nada, o PlayComputer usará o <b>piano</b>.
+        </p>
+
+        <table class="simple-table">
+            <thead>
+                <tr>
+                    <th>Nome do Instrumento</th>
+                    <th>Tipo de Som</th>
+                    <th>Exemplo de Uso</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>piano</code></td><td>Piano clássico (Padrão)</td><td><code>play piano note(1)</code></td></tr>
+                <tr><td><code>guitar</code></td><td>Violão / Guitarra</td><td><code>play guitar note(3)</code></td></tr>
+                <tr><td><code>synthBass</code></td><td>Baixo eletrônico forte</td><td><code>play synthBass note(1)</code></td></tr>
+                <tr><td><code>guitarBass</code></td><td>Contrabaixo acústico/elétrico</td><td><code>play guitarBass note(1)</code></td></tr>
+                <tr><td><code>synth</code></td><td>Teclado futurista / Eletrônico</td><td><code>play synth note(5)</code></td></tr>
+                <tr><td><code>organ</code></td><td>Órgão de igreja / Jazz</td><td><code>play organ note(1)</code></td></tr>
+                <tr><td><code>accordeon</code></td><td>Sanfona / Acordeão</td><td><code>play accordeon note(1)</code></td></tr>
+                <tr><td><code>ukulele</code></td><td>Ukulele praiano leve</td><td><code>play ukulele note(1)</code></td></tr>
+                <tr><td><code>drum</code></td><td>Bateria e Percussão</td><td><code>play drum note(1)</code> (1 = Bumbo)</td></tr>
+            </tbody>
+        </table>
+
+        <!-- PASSO 4: BATERIA -->
+        <h2 class="section-title">4. Como Criar Batidas com a Bateria (drum)</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+            A bateria não usa notas musicais do piano. No instrumento <code>drum</code>, os números ativam partes da bateria:
+        </p>
+
         <div class="grid">
             <div class="card">
                 <div>
-                    <div class="card-header">
-                        <span class="keyword-name">play</span>
-                        <span class="category-badge">Execução</span>
-                    </div>
-                    <p class="card-desc">Instrução principal para emitir notas ou blocos num canal/instrumento específico. Aceita qualquer um dos 9 instrumentos listados acima.</p>
+                    <p class="card-desc">
+                        <b>1</b>: Bumbo (Grave) | <b>2</b>: Surdo | <b>3</b>: Tom-Tom<br>
+                        <b>4</b>: Caixa (Batida seca) | <b>5</b>: Abafo<br>
+                        <b>6</b>: Chimbal Fechado (Tss) | <b>7</b>: Prato de Ataque
+                    </p>
                 </div>
-                <pre>play standard note(1)
-play synthBass note(1)
-play guitar note(3)</pre>
+                <pre>// Batida simples de Pop/Rock
+play drum part {
+    note(1) rhythm(8), // Bumbo
+    note(6) rhythm(8), // Chimbal
+    note(4) rhythm(8)  // Caixa
+}</pre>
             </div>
+        </div>
 
-            <div class="card">
-                <div>
-                    <div class="card-header">
-                        <span class="keyword-name">note()</span>
-                        <span class="category-badge">Função</span>
-                    </div>
-                    <p class="card-desc">Representa o grau da nota na escala ativa (1 a 7). Aceita modificadores de tom e oitava.</p>
-                </div>
-                <pre>note(1^[8++]) // C#6 na escala C</pre>
-            </div>
+        <!-- PASSO 5: ORGANIZAÇÃO -->
+        <h2 class="section-title">5. Juntando Tudo e Repetindo Trechos</h2>
 
+        <div class="grid">
             <div class="card">
                 <div>
                     <div class="card-header">
                         <span class="keyword-name">chord()</span>
-                        <span class="category-badge">Função</span>
+                        <span class="badge">Acorde (Notas Juntas)</span>
                     </div>
-                    <p class="card-desc">Executa múltiplas notas simultaneamente para gerar acordes harmônicos.</p>
+                    <p class="card-desc">Toca várias notas exatamente ao mesmo tempo para criar um harmonia rica.</p>
                 </div>
-                <pre>chord(1, 3, 5) // Tríada de Dó Maior</pre>
-            </div>
-
-            <div class="card">
-                <div>
-                    <div class="card-header">
-                        <span class="keyword-name">rhythm()</span>
-                        <span class="category-badge">Função</span>
-                    </div>
-                    <p class="card-desc">Métrica de duração da nota (1 = Semibreve, 2 = Mínima, 4 = Semínima, 8 = Colcheia, 16 = Semicolcheia). Suporta pausa.</p>
-                </div>
-                <pre>note(1) rhythm(4)
-rhythm(pause 4)</pre>
-            </div>
-
-            <div class="card">
-                <div>
-                    <div class="card-header">
-                        <span class="keyword-name">part { }</span>
-                        <span class="category-badge">Bloco</span>
-                    </div>
-                    <p class="card-desc">Agrupa uma sequência de instruções de um mesmo canal em um bloco estruturado, dispensando vírgulas excessivas.</p>
-                </div>
-                <pre>play standard part {
-    note(1) rhythm(1),
-    note(2) rhythm(1)
-}</pre>
-            </div>
-
-            <div class="card">
-                <div>
-                    <div class="card-header">
-                        <span class="keyword-name">= (Variáveis)</span>
-                        <span class="category-badge">Atribuição</span>
-                    </div>
-                    <p class="card-desc">Armazena notas, acordes, números ou trechos em identificadores para reaproveitamento no arranjo.</p>
-                </div>
-                <pre>base = note(1)
-play standard base</pre>
-            </div>
-        </div>
-
-        <!-- FLUXO E ATRIBUTOS -->
-        <h2 class="section-title">4. Controle de Fluxo, Atributos e Loops</h2>
-        <div class="grid">
-            <div class="card">
-                <div>
-                    <div class="card-header">
-                        <span class="keyword-name">atribute { }</span>
-                        <span class="category-badge">Atributo</span>
-                    </div>
-                    <p class="card-desc">Declara metadados de identificação (<code>id</code> e <code>class</code>) no início do bloco de uma parte.</p>
-                </div>
-                <pre>atribute {
-    id = "baixo"
-    class = "groove"
-}</pre>
-            </div>
-
-            <div class="card">
-                <div>
-                    <div class="card-header">
-                        <span class="keyword-name">escape(n)</span>
-                        <span class="category-badge">Sincronismo</span>
-                    </div>
-                    <p class="card-desc">Aplica um deslocamento temporal (delay) de <i>n</i> semínimas para evitar colisão e alinhar execuções concorrentes.</p>
-                </div>
-                <pre>#baixo.escape(2)</pre>
+                <pre>play piano chord(1, 3, 5) // Acorde Maior</pre>
             </div>
 
             <div class="card">
                 <div>
                     <div class="card-header">
                         <span class="keyword-name">repeat(n)</span>
-                        <span class="category-badge">Loop</span>
+                        <span class="badge">Repetir Trecho</span>
                     </div>
-                    <p class="card-desc">Reaplica um canal por ID ou um bloco polifônico completo <i>n</i> vezes sequencialmente.</p>
+                    <p class="card-desc">Repete um trecho musical quantas vezes você quiser sem precisar reescrever o código.</p>
                 </div>
-                <pre>#trecho.repeat(4)
-repeat(2) {
-    #trecho
-    #baixo.escape(2)
-}</pre>
-            </div>
-
-            <div class="card">
-                <div>
-                    <div class="card-header">
-                        <span class="keyword-name">tone()</span>
-                        <span class="category-badge">Modificador</span>
-                    </div>
-                    <p class="card-desc">Aplica transposição de afinação (v, vv, ^, ^^) sobre uma parte inteira referenciada.</p>
-                </div>
-                <pre>#trecho.tone(^)</pre>
-            </div>
-        </div>
-
-        <!-- MAPEAMENTO DRUM -->
-        <h2 class="section-title">5. Percussão Irregular (drum)</h2>
-        <div class="grid">
-            <div class="card">
-                <div>
-                    <div class="card-header">
-                        <span class="keyword-name">drum</span>
-                        <span class="category-badge">Instrumento</span>
-                    </div>
-                    <p class="card-desc">Canal percussivo onde os índices de <code>note(n)</code> disparam elementos do kit de bateria:</p>
-                    <p class="card-desc" style="font-size:0.85rem;">
-                        <b>1</b>: Bumbo (BOOM) | <b>2</b>: Surdo | <b>3</b>: Tom-Tom | <b>4</b>: Caixa | <b>5</b>: Abafo | <b>6</b>: Chimbal Fechado | <b>7</b>: Prato de Ataque | <b>8/9</b>: Caixas Aguda/Grave
-                    </p>
-                </div>
-                <pre>play drum part {
-    note(1) rhythm(8), // Bumbo
-    note(6) rhythm(8)  // Chimbal
-}</pre>
+                <pre>#meuTrecho.repeat(4) // Repete 4 vezes</pre>
             </div>
         </div>
 
         <footer>
-            <p>PlayComputer DSL &copy; 2026 — Arquitetura de Áudio e Compiladores por Yudhi Gerson</p>
+            <p>PlayComputer DSL &copy; 2026 — Linguagem de Composição Musical criada por Yudhi Gerson</p>
         </footer>
     </div>
 
