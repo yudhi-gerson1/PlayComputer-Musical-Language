@@ -1,10 +1,18 @@
 /* ================= PlayComputer v1.1 — main.js =================
-   Ponto de entrada do sistema.
-   Verifica o estado das dependências globais no escopo 'window'.
+   Ponto de entrada. Como todos os módulos usam funções globais simples
+   (sem import/export, para funcionar direto com file:// sem servidor),
+   este arquivo não precisa orquestrar nada manualmente — cada módulo já
+   registra seus próprios listeners via DOMContentLoaded (ui.js e share.js).
+
+   Ele existe para:
+   1) Deixar explícito, num único lugar, a ORDEM DE DEPENDÊNCIA esperada
+      entre os módulos (útil se algum dia migrarmos para ES Modules).
+   2) Fazer uma verificação de sanidade no carregamento, avisando no
+      console (não na interface) se algum módulo essencial não carregou —
+      ajuda a debugar rapidamente um <script src> quebrado ou fora de ordem.
    ========================================================================= */
 
 (function checkModulesLoaded(){
-  // Lista de símbolos e funções essenciais que devem existir no escopo global
   const required = [
     'stripComments', 'splitTopLevel', 'extractBraceBlocks',        // core-utils.js
     'degreeToFreq', 'modToSemitone', 'parseRhythmArg',              // theory.js
@@ -18,21 +26,8 @@
     'renderAndDownload',                                            // audio-export.js
     'playSchedule', 'setStatus'                                     // ui.js
   ];
-
-  // Filtra as funções que não foram carregadas corretamente
   const missing = required.filter(name => typeof window[name] !== 'function');
-
   if(missing.length){
-    console.error(
-      `%c[PlayComputer v1.1] Erro de Initalização:\n%cOs seguintes módulos não foram carregados ou estão fora de ordem:\n- ${missing.join('\n- ')}`,
-      'color: #ff4d4d; font-weight: bold; font-size: 14px;',
-      'color: #ffffff;'
-    );
-  } else {
-    console.log(
-      '%c[PlayComputer v1.1] Módulos de áudio, sintetizadores e parser carregados com sucesso!',
-      'color: #00ffcc; font-weight: bold;'
-    );
+    console.error('[PlayComputer] Módulos ausentes ou fora de ordem no <script>:', missing);
   }
-})(); // <--- O "()" final executa a IIFE imediatamente ao carregar o script
-
+});
