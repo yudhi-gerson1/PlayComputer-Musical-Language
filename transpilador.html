@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PlayComputer — Compilador Web</title>
+<title>PlayComputer v1.1 — Compilador Web</title>
 <style>
   :root{
     --bg:#0d1117;
@@ -119,47 +119,52 @@
 </head>
 <body>
 <div class="app">
-  <h1>PlayComputer</h1>
+  <h1>PlayComputer v1.1</h1>
   <p class="subtitle">Compilador e player web para a linguagem musical PlayComputer</p>
   <div class="main">
     <div class="editor-panel">
       <textarea id="code" spellcheck="false">compass standard
-scale standard
-bpm 100
-metronome active
+scale C minor
+bpm 120
+stdOctave 4
 
-play piano part {
-    atribute {
-        id = "melodia"
-    }
-    repeat(3) {
-        note(1) rhythm(4),
-        note(2) rhythm(4),
-        note(3) rhythm(4),
-        tone(^)
+<melodia> part {
+    [8+] {
+        note(1, 3, 5) rhythm(4.),
+        repeatEach(3, 2) {
+            note(5) rhythm(8),
+            note(8) rhythm(4)
+        }
     }
 }
 
-play drum part {
+play violin, saxophone {
     atribute {
-        id = "bateria"
+        ids = "solista_v", "solista_s"
+        class = "dueto"
+        type = reverb
+        articul = legato
+        fade = in: quiet 30%, out: quiet 50%
+        volume = 85%
+        speed = 1.2x
     }
-    note(1) rhythm(4),
-    note(4) rhythm(4),
-    note(1) rhythm(4),
-    note(7) rhythm(2),
+    
+    repeat(2) {
+        <melodia>.tone(^)
+    }
 }
 
-play guitar part {
+play synthBass {
     atribute {
-        id = "base"
+        id = "baixo"
+        type = distorted
+        articul = staccato
+        speed = 100%
+        volume = 90%
     }
-    chord(1, 3, 5) rhythm(2),
-    chord(4, 6, 1[8+]) rhythm(2),
+    
+    note(1, 1, 4, 5)[8-2] rhythm(4)
 }
-
-#bateria.repeat(2)
-#base.escape(8)
 </textarea>
       <div class="controls">
         <button id="btnPlay">▶ Tocar Agora</button>
@@ -175,6 +180,27 @@ play guitar part {
   </div>
 </div>
 
-<script src="script.js"></script>
+<!-- Módulos de Utilidade e Teoria Musical -->
+<script src="core-utils.js"></script>
+<script src="theory.js"></script>
+
+<!-- Módulos do Parser (AST & Compilação) -->
+<script src="parser-statements.js"></script>
+<script src="parser-vars.js"></script>
+<script src="parser-play.js"></script>
+
+<!-- Scheduler de Eventos e Motor Áudio Web -->
+<script src="scheduler.js"></script>
+<script src="synth-instruments.js"></script>
+<script src="synth-drum.js"></script>
+<script src="synth-effects.js"></script>
+
+<!-- Renderização Offline e Exportação -->
+<script src="audio-export.js"></script>
+
+<!-- Interface do Usuário e Orquestrador Principal -->
+<script src="ui.js"></script>
+<script src="main.js"></script>
 </body>
 </html>
+
