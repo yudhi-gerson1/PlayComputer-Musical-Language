@@ -9,11 +9,6 @@ const INSTRUMENT_LIST = 'standard|piano|guitar|synthBass|guitarBass|synth|organ|
 const EFFECT_TYPES = ['delay','wah','8bit','distorted','reverb','normal'];
 const ARTICULATIONS = ['staccato','legato','marcato','portato','tenuto','normal'];
 
-const ARTICULATION_GATE = {
-  staccato: 0.50, normal: 0.90, tenuto: 1.05,
-  legato: 1.0, marcato: 0.95, portato: 0.75
-};
-
 function normalizeInstrument(name){
   const n=(name||'').toLowerCase();
   const map={
@@ -31,10 +26,10 @@ function parseGlobals(src, state){
     const m=src.match(/\bcompass\s+(standard|(\d+)\/(\d+))/);
     if(m){
       if(m[1]==='standard'){ state.compass='4/4'; state.beatsPerMeasure=4; }
-      else { state.compass=m[1]; state.beatsPerMeasure=parseInt(m[2],10)||4; }
+      else { state.compass=m[1]; state.beatsPerMeasure=parseInt(m[2])||4; }
     }
   }catch(e){}
-  try{ const m=src.match(/\bbpm\s+(\d+)/); if(m) state.bpm = parseInt(m[1],10)||120; }catch(e){}
+  try{ const m=src.match(/\bbpm\s+(\d+)/); if(m) state.bpm = parseInt(m[1])||120; }catch(e){}
   try{
     const m=src.match(/\bscale\s+(standard|[A-G]#?)\s*(major|minor)?/);
     if(m){
@@ -49,6 +44,9 @@ function parseGlobals(src, state){
   try{ parseStdOctave(src, state); }catch(e){}
 }
 
+// Parseia o corpo do bloco "atribute { ... }", devolvendo um objeto plano
+// com tudo que reconheceu. Tolerante: chaves não reconhecidas são
+// ignoradas silenciosamente.
 function parseAttributeBlock(attrBody){
   const attrs = { id:null, ids:[], classes:[], type:'normal', articul:'normal',
                   fadeIn:null, fadeOut:null, volume:1, speedFactor:1 };
@@ -56,6 +54,7 @@ function parseAttributeBlock(attrBody){
   const idMatch = attrBody.match(/\bid\s*=\s*"([^"]+)"/);
   if(idMatch) attrs.id = idMatch[1];
 
+  // ids = "a", "b", "c"  (lista para play multi-instrumento)
   const idsMatch = attrBody.match(/\bids\s*=\s*("(?:[^"]+)"(?:\s*,\s*"[^"]+")*)/);
   if(idsMatch){
     attrs.ids = idsMatch[1].match(/"([^"]+)"/g).map(s=>s.replace(/"/g,''));
@@ -67,7 +66,7 @@ function parseAttributeBlock(attrBody){
   const typeMatch = attrBody.match(/\btype\s*=\s*"?([A-Za-z0-9]+)"?/);
   if(typeMatch){
     const t = typeMatch[1].toLowerCase();
-    attrs.type = EFFECT_TYPES.includes(t) ? t : 'normal';
+    attrs.type = EFFECT_TYPES.includes(t) ? t : 'normal'; // desconhecido -> normal
   }
 
   const articulMatch = attrBody.match(/\barticul\s*=\s*"?([A-Za-z]+)"?/);
@@ -76,33 +75,47 @@ function parseAttributeBlock(attrBody){
     attrs.articul = ARTICULATIONS.includes(a) ? a : 'normal';
   }
 
+  // fade = in: quiet 30%, out: quiet 50%   OU   fade = loud 50%
   const fadeMatch = attrBody.match(/\bfade\s*=\s*([^\n]+)/);
   if(fadeMatch){
     const raw = fadeMatch[1].trim();
     const inOutMatch = raw.match(/in:\s*(loud|quiet)\s*(\d+)?%?[,;]?\s*out:\s*(loud|quiet)\s*(\d+)?%?/i);
     if(inOutMatch){
-      attrs.fadeIn  = { kind: inOutMatch[1].toLowerCase(), pct: parseInt(inOutMatch[2],10)||50 };
-      attrs.fadeOut = { kind: inOutMatch[3].toLowerCase(), pct: parseInt(inOutMatch[4],10)||50 };
+      attrs.fadeIn  = { kind: inOutMatch[1].toLowerCase(), pct: parseInt(inOutMatch[2])||50 };
+      attrs.fadeOut = { kind: inOutMatch[3].toLowerCase(), pct: parseInt(inOutMatch[4])||50 };
     } else {
       const single = raw.match(/(loud|quiet)\s*(\d+)?%?/i);
       if(single){
-        const fadeObj = { kind: single[1].toLowerCase(), pct: parseInt(single[2],10)||50 };
+        const fadeObj = { kind: single[1].toLowerCase(), pct: parseInt(single[2])||50 };
         attrs.fadeIn = fadeObj; attrs.fadeOut = fadeObj;
       }
     }
   }
 
   const volMatch = attrBody.match(/\bvolume\s*=\s*(\d+)%/);
-  if(volMatch) attrs.volume = Math.max(0, Math.min(2, parseInt(volMatch[1],10)/100));
+  if(volMatch) attrs.volume = Math.max(0, Math.min(2, parseInt(volMatch[1])/100));
 
+  // speed = 50%  ou  speed = 3x
   const speedPctMatch = attrBody.match(/\bspeed\s*=\s*(\d+)%/);
   const speedMulMatch = attrBody.match(/\bspeed\s*=\s*(\d+(?:\.\d+)?)\s*x/i);
-  if(speedPctMatch) attrs.speedFactor = Math.max(0.05, parseInt(speedPctMatch[1],10)/100);
+  if(speedPctMatch) attrs.speedFactor = Math.max(0.05, parseInt(speedPctMatch[1])/100);
   else if(speedMulMatch) attrs.speedFactor = Math.max(0.05, parseFloat(speedMulMatch[1]));
 
   return attrs;
 }
 
+// Gate time (proporção da duração do ritmo que efetivamente soa) por
+// articulação — valores confirmados/definidos com o usuário.
+const ARTICULATION_GATE = {
+  staccato: 0.50, normal: 0.90, tenuto: 1.05,
+  legato: 1.0,     // sem gap — soa até o próximo evento começar
+  marcato: 0.95,   // gap pequeno, mas com ênfase de ataque (tratado no synth)
+  portato: 0.75
+};
+
+// Parseia o corpo de um play (já sem o bloco atribute) em uma lista de
+// eventos, resolvendo statements comuns, referências a <var> e blocos de
+// repeat()/repeatEach()/escopo de oitava.
 function parsePlayBody(body, state, vars){
   const stmts = splitTopLevel(body.replace(/\n/g,' '), ',');
   const events = [];
@@ -117,58 +130,54 @@ function parsePlayBody(body, state, vars){
   return events;
 }
 
+// repeat(n) { ... } escrito DENTRO de um play — reaproveita a lógica de
+// acumulação de tone() por iteração, agora suportando tanto statements
+// literais quanto referências <var>.tone(^) (via parser-vars.js).
 function parseInlinePlayRepeat(stmtRaw, state, vars){
   const stmt = (stmtRaw||'').trim();
   const m = stmt.match(/^repeat\(\s*(\d+)\s*\)\s*\{([\s\S]*)\}$/);
   if(!m) return null;
-  const count = parseInt(m[1],10)||1;
+  const count = parseInt(m[1])||1;
   const innerStmts = splitTopLevel(m[2].replace(/\n/g,' '), ',');
 
   let toneStep = 0;
-  const events = [];
-
-  // Descobre tom global do bloco primeiro
-  innerStmts.forEach(s => {
+  const varRefs = [];
+  const literalStmts = [];
+  innerStmts.forEach(s=>{
     const t = s.trim();
     const globalTone = t.match(/^tone\(([^)]*)\)$/);
-    if(globalTone) toneStep = modToSemitone(globalTone[1]);
+    if(globalTone){ toneStep = modToSemitone(globalTone[1]); return; }
+    if(t.startsWith('<')) varRefs.push(t);
+    else literalStmts.push(t);
   });
 
-  // Executa mantendo a ordem exata das declarações
-  for(let i = 0; i < count; i++){
-    const factor = Math.pow(2, (toneStep * i) / 12);
-    innerStmts.forEach(s => {
-      const t = s.trim();
-      if(t.match(/^tone\(([^)]*)\)$/)) return;
-
-      if(t.startsWith('<')){
-        const resolved = resolveVarInAccumulatingRepeat(t, state, vars, 0, 1);
-        if(resolved){
-          resolved.forEach(ev => {
-            if(ev.pause) events.push({...ev});
-            else if(ev.type === 'note') events.push({...ev, freq: ev.freq * factor});
-            else if(ev.type === 'chord') events.push({...ev, freqs: ev.freqs.map(f => f * factor)});
-          });
-        }
-      } else {
-        const single = parseGenericStatement(t, state, vars, 0);
-        if(!single) return;
-        single.forEach(ev => {
-          if(ev.pause){ events.push({...ev}); return; }
-          if(ev.type==='note') events.push({...ev, freq: ev.freq * factor});
-          else if(ev.type==='chord') events.push({...ev, freqs: ev.freqs.map(f => f * factor)});
-        });
-      }
+  const events = [];
+  // Referências de variável usam acumulação dedicada (parser-vars.js).
+  varRefs.forEach(ref=>{
+    const resolved = resolveVarInAccumulatingRepeat(ref, state, vars, 0, count);
+    if(resolved) events.push(...resolved);
+  });
+  // Statements literais usam a mesma lógica de fator acumulado por índice.
+  for(let i=0;i<count;i++){
+    const factor = Math.pow(2, (toneStep*i)/12);
+    literalStmts.forEach(s=>{
+      const single = parseGenericStatement(s, state, vars, 0);
+      if(!single) return;
+      single.forEach(ev=>{
+        if(ev.pause){ events.push({...ev}); return; }
+        if(ev.type==='note') events.push({...ev, freq: ev.freq*factor});
+        else if(ev.type==='chord') events.push({...ev, freqs: ev.freqs.map(f=>f*factor)});
+      });
     });
   }
-
   return events;
 }
 
 function naturalDuration(part){
-  return part.events.reduce((s,e)=>s+(e.seconds||0), 0);
+  return part.events.reduce((s,e)=>s+e.seconds,0);
 }
 
+// Ponto de entrada principal do compilador.
 function compile(rawSource){
   const state = {bpm:120, root:'C', scaleType:'major', compass:'4/4', beatsPerMeasure:4,
                   metronome:false, lang:'pt-BR', stdOctave:4};
@@ -177,6 +186,7 @@ function compile(rawSource){
   try{ parseGlobals(src, state); }catch(e){}
 
   let vars = {};
+  // 1) Variáveis <parte> primeiro (podem ser referenciadas por qualquer play).
   let srcAfterVars = src;
   try{
     const r = extractPartVariables(src, state, vars);
@@ -186,6 +196,10 @@ function compile(rawSource){
 
   let parts = [];
 
+  // 2) Blocos play (single ou multi-instrumento). "part" é OPCIONAL —
+  //    regra confirmada: obrigatório quando o corpo tem notas literais,
+  //    dispensável quando só há referências a variáveis (parser tolerante
+  //    aceita os dois casos com a mesma regex, sem distinguir).
   const playHead = '\\bplay\\s+((?:' + INSTRUMENT_LIST + ')(?:\\s*,\\s*(?:' + INSTRUMENT_LIST + '))*)\\s+(?:part\\s*)?\\{';
   let playBlocks = [];
   try{ playBlocks = extractBraceBlocks(srcAfterVars, playHead); }catch(e){}
@@ -203,21 +217,10 @@ function compile(rawSource){
         body = body.replace(attrMatch[0], '');
       }
 
-      const rawEvents = parsePlayBody(body, state, vars);
+      const events = parsePlayBody(body, state, vars);
 
-      // Aplica articulação e velocidade (speedFactor) diretamente no tempo de cada evento
-      const gateRatio = ARTICULATION_GATE[attrs.articul] || 0.90;
-      const speed = attrs.speedFactor || 1;
-
-      const processedEvents = rawEvents.map(e => {
-        const adjustedSeconds = (e.seconds || 0) / speed;
-        return {
-          ...e,
-          seconds: adjustedSeconds,
-          durationSeconds: e.pause ? adjustedSeconds : adjustedSeconds * gateRatio
-        };
-      });
-
+      // Cada instrumento da lista vira seu PRÓPRIO canal (mesma melodia,
+      // timbre diferente). IDs pareados por posição com fallback automático.
       instrumentNames.forEach((instrument, idx)=>{
         let id = attrs.ids[idx];
         if(!id){
@@ -227,7 +230,7 @@ function compile(rawSource){
         }
         parts.push({
           id, classes: attrs.classes, instrument,
-          events: processedEvents.map(e=>({...e})),
+          events: events.map(e=>({...e})), // cópia independente por canal
           startOffsetSeconds:0, repeatCount:1, toneStep:0, autoplay:true,
           type: attrs.type, articul: attrs.articul,
           fadeIn: attrs.fadeIn, fadeOut: attrs.fadeOut,
@@ -240,7 +243,7 @@ function compile(rawSource){
   let srcRemaining = srcAfterVars;
   try{ srcRemaining = removeBlocks(srcAfterVars, playBlocks); }catch(e){}
 
-  // Modificadores externos (#id/.classe)
+  // 3) Encadeamento externo #id/.classe.repeat()/.tone()/.escape()
   try{
     const modRe = /([#.])([\w-]+)((?:\s*\.(?:repeat|tone|escape)\([^)]*\))+)/g;
     let m3;
@@ -255,7 +258,7 @@ function compile(rawSource){
       targets.forEach(part=>{
         calls.forEach(({fn,arg})=>{
           try{
-            if(fn==='repeat'){ const n=parseInt(arg,10); if(n>0) part.repeatCount=n; }
+            if(fn==='repeat'){ const n=parseInt(arg); if(n>0) part.repeatCount=n; }
             else if(fn==='tone'){ part.toneStep = modToSemitone(arg); }
             else if(fn==='escape'){ const n=parseFloat(arg)||0; part.startOffsetSeconds = n*(60/state.bpm); }
           }catch(e){}
@@ -264,14 +267,15 @@ function compile(rawSource){
     }
   }catch(e){}
 
-  // Blocos repeat(n) soltos
+  // 4) Blocos repeat(n) { #id/.classe [.tone()/.escape()] } soltos, fora
+  //    de qualquer play (sintaxe original v1.0, mantida).
   let repeatBlocks = [];
   try{ repeatBlocks = extractBraceBlocks(srcRemaining, 'repeat\\(\\s*(\\d+)\\s*\\)\\s*\\{'); }catch(e){}
 
   const groupInstances = [];
   repeatBlocks.forEach(rb=>{
     try{
-      const count = parseInt(rb.groups[1],10)||1;
+      const count = parseInt(rb.groups[1])||1;
       const lines = rb.body.split(/[\n,]/).map(l=>l.trim()).filter(Boolean);
       let groupToneStep = 0;
       const refs=[];
@@ -310,4 +314,4 @@ function compile(rawSource){
   });
 
   return {state, parts, vars, groupInstances};
-}
+    }
