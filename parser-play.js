@@ -3,6 +3,18 @@
    play (single e multi-instrumento), atributos novos (type/articul/fade/
    volume/speed/ids), escopos de oitava, repeat/tone/escape externos.
    Depende de: core-utils.js, theory.js, parser-statements.js, parser-vars.js
+
+   CORREÇÃO CRÍTICA NESTA REVISÃO:
+   Este arquivo tinha uma declaração `const ARTICULATION_GATE` esquecida de
+   uma versão anterior (não era usada em nenhum lugar aqui dentro). O
+   scheduler.js TAMBÉM declara `const ARTICULATION_GATE` (correto, é onde
+   ela é de fato usada). Como os dois arquivos compartilham o mesmo escopo
+   global (não há ES Modules aqui, só <script> simples), isso causava
+   "Uncaught SyntaxError: Identifier 'ARTICULATION_GATE' has already been
+   declared" assim que scheduler.js tentava carregar — quebrando o
+   compilador inteiro (buildSchedule nunca era definido), 100% do tempo,
+   independente do código PlayComputer testado. Removida a declaração
+   duplicada daqui; a única fonte de verdade agora é scheduler.js.
    ========================================================================= */
 
 const INSTRUMENT_LIST = 'standard|piano|guitar|synthBass|guitarBass|synth|organ|accordeon|ukulele|drum|violin|saxophone|trumpet|vibraphone|choir|whistle';
@@ -103,15 +115,6 @@ function parseAttributeBlock(attrBody){
 
   return attrs;
 }
-
-// Gate time (proporção da duração do ritmo que efetivamente soa) por
-// articulação — valores confirmados/definidos com o usuário.
-const ARTICULATION_GATE = {
-  staccato: 0.50, normal: 0.90, tenuto: 1.05,
-  legato: 1.0,     // sem gap — soa até o próximo evento começar
-  marcato: 0.95,   // gap pequeno, mas com ênfase de ataque (tratado no synth)
-  portato: 0.75
-};
 
 // Parseia o corpo de um play (já sem o bloco atribute) em uma lista de
 // eventos, resolvendo statements comuns, referências a <var> e blocos de
@@ -314,4 +317,4 @@ function compile(rawSource){
   });
 
   return {state, parts, vars, groupInstances};
-    }
+           }
