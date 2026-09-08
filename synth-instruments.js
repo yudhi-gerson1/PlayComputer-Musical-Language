@@ -3,7 +3,21 @@
    6 novos: violin, saxophone, trumpet, vibraphone, choir, whistle).
    dest passado aqui já é o INÍCIO da cadeia de efeitos do canal (ver
    synth-effects.js) — os instrumentos não sabem nada sobre delay/reverb/etc.
-   Depende de: nada (funções puras de Web Audio).
+
+   CORREÇÃO NESTA REVISÃO:
+   - Cada instrumento tinha um piso de decaimento "estético" (ex.: piano
+     nunca soava menos que 1.1s), pensado para simular sustentação de
+     instrumento real. O problema é que esse piso IGNORAVA a duração real
+     calculada pela articulação (dur) — então staccato, legato, marcato
+     etc. ficavam mascarados: o piano continuava soando 1.1s mesmo quando
+     deveria durar 0.1s. Trocado por pisos técnicos mínimos (só o
+     suficiente pra evitar clique digital ao cortar o som abruptamente),
+     deixando 'dur' (controlado pelo gate de articulação em scheduler.js)
+     mandar de verdade na duração percebida.
+   - ADIÇÃO: scheduleNote agora aceita um parâmetro 'accent' — quando
+     diferente de 1, insere um GainNode extra entre o instrumento e o
+     destino, multiplicando o volume só daquela nota. É o que dá ao
+     marcato sua ênfase de ataque sem precisar duplicar toda a síntese.
    ========================================================================= */
 
 function createNoiseBuffer(ctx, duration){
@@ -22,7 +36,7 @@ function pluckedTone(ctx, dest, freq, time, dur, opts){
   const harmonics  = opts.harmonics  || [1,2,3,4,5,6];
   const ampWeights = opts.ampWeights || [1,0.55,0.32,0.2,0.12,0.07];
   const spread     = opts.spread     !== undefined ? opts.spread : 1.6;
-  const baseDecay  = Math.max(opts.decay || dur || 0.4, 0.1);
+  const baseDecay  = Math.max(opts.decay || dur || 0.4, 0.06); // piso técnico mínimo
   const attack     = opts.attack     || 0.004;
   const gainAmt    = opts.gain       || 0.4;
   const inharm     = opts.inharm     || 0;
@@ -52,7 +66,7 @@ function pluckedTone(ctx, dest, freq, time, dur, opts){
       const osc = ctx.createOscillator(); osc.type='sine';
       osc.frequency.setValueAtTime(stretchedFreq, time);
       const g = ctx.createGain();
-      const decayTime = Math.max(baseDecay / (1 + (h-1)*spread), 0.06);
+      const decayTime = Math.max(baseDecay / (1 + (h-1)*spread), 0.04);
       const amp = Math.max((ampWeights[idx]!==undefined? ampWeights[idx] : 0.05) * gainAmt, 0.0009);
       g.gain.setValueAtTime(0.0001, time);
       g.gain.exponentialRampToValueAtTime(amp, time+attack);
@@ -64,13 +78,13 @@ function pluckedTone(ctx, dest, freq, time, dur, opts){
 }
 
 function scheduleOrgan(ctx, dest, freq, time, dur){
-  const d = Math.max(dur, 0.15);
+  const d = Math.max(dur, 0.06); // era 0.15
   const partials = [1,2,3,4,6];
   const amps = [0.45,0.25,0.16,0.12,0.08];
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, time);
-  g.gain.linearRampToValueAtTime(0.28, time+0.035);
-  g.gain.setValueAtTime(0.28, time+Math.max(d*0.8,0.05));
+  g.gain.linearRampToValueAtTime(0.28, time+Math.min(0.035, d*0.3));
+  g.gain.setValueAtTime(0.28, time+Math.max(d*0.8,0.03));
   g.gain.linearRampToValueAtTime(0.0001, time+d);
   g.connect(dest);
   partials.forEach((p,idx)=>{
@@ -86,12 +100,12 @@ function scheduleOrgan(ctx, dest, freq, time, dur){
 }
 
 function scheduleAccordeon(ctx, dest, freq, time, dur){
-  const d = Math.max(dur, 0.18);
+  const d = Math.max(dur, 0.06); // era 0.18
   const reedFilter = ctx.createBiquadFilter();
   reedFilter.type='bandpass'; reedFilter.frequency.value = freq*3; reedFilter.Q.value = 0.9;
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, time);
-  g.gain.linearRampToValueAtTime(0.32, time+0.05);
+  g.gain.linearRampToValueAtTime(0.32, time+Math.min(0.05, d*0.4));
   g.gain.exponentialRampToValueAtTime(0.0008, time+d);
   reedFilter.connect(g); g.connect(dest);
   [-7,7].forEach(cents=>{
@@ -112,12 +126,12 @@ function scheduleSynth(ctx, dest, freq, time, dur){
   const osc = ctx.createOscillator(); osc.type='sawtooth';
   osc.frequency.setValueAtTime(freq, time);
   const filt = ctx.createBiquadFilter(); filt.type='lowpass'; filt.Q.value=6;
-  const d = Math.max(dur,0.08);
+  const d = Math.max(dur,0.05); // já era pequeno, mantido
   filt.frequency.setValueAtTime(freq*10, time);
   filt.frequency.exponentialRampToValueAtTime(Math.max(freq*1.2,200), time+d*0.7);
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, time);
-  g.gain.exponentialRampToValueAtTime(0.32, time+0.008);
+  g.gain.exponentialRampToValueAtTime(0.32, time+Math.min(0.008, d*0.3));
   g.gain.exponentialRampToValueAtTime(0.0008, time+d);
   osc.connect(filt); filt.connect(g); g.connect(dest);
   osc.start(time); osc.stop(time+d+0.05);
@@ -125,10 +139,10 @@ function scheduleSynth(ctx, dest, freq, time, dur){
 
 function scheduleSynthBass(ctx, dest, freq, time, dur){
   const f = freq/2;
-  const d = Math.max(dur,0.1);
+  const d = Math.max(dur,0.06); // era 0.1
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, time);
-  g.gain.exponentialRampToValueAtTime(0.4, time+0.01);
+  g.gain.exponentialRampToValueAtTime(0.4, time+Math.min(0.01, d*0.3));
   g.gain.exponentialRampToValueAtTime(0.0008, time+d);
   const filt = ctx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=Math.max(f*4,300);
   filt.connect(g); g.connect(dest);
@@ -139,16 +153,13 @@ function scheduleSynthBass(ctx, dest, freq, time, dur){
   osc2.connect(og2); og2.connect(filt); osc2.start(time); osc2.stop(time+d+0.05);
 }
 
-// ADIÇÃO v1.1 — violin: onda sustentada (não decai como corda dedilhada),
-// com vibrato entrando gradualmente após o ataque (característico de
-// cordas friccionadas) e leve ruído de arco no ataque.
 function scheduleViolin(ctx, dest, freq, time, dur){
-  const d = Math.max(dur, 0.25);
+  const d = Math.max(dur, 0.08); // era 0.25
   const filt = ctx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value = freq*6;
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, time);
-  g.gain.linearRampToValueAtTime(0.3, time+0.06); // ataque de arco, não instantâneo
-  g.gain.setValueAtTime(0.3, time+Math.max(d*0.75,0.08));
+  g.gain.linearRampToValueAtTime(0.3, time+Math.min(0.06, d*0.3));
+  g.gain.setValueAtTime(0.3, time+Math.max(d*0.75,0.05));
   g.gain.linearRampToValueAtTime(0.0001, time+d);
   filt.connect(g); g.connect(dest);
 
@@ -156,7 +167,7 @@ function scheduleViolin(ctx, dest, freq, time, dur){
   osc.frequency.setValueAtTime(freq, time);
   const lfo = ctx.createOscillator(); lfo.frequency.value = 5.8;
   const lfoGain = ctx.createGain(); lfoGain.gain.setValueAtTime(0, time);
-  lfoGain.gain.linearRampToValueAtTime(6, time+0.15); // vibrato entra depois do ataque
+  lfoGain.gain.linearRampToValueAtTime(6, time+Math.min(0.15, d*0.5));
   lfo.connect(lfoGain); lfoGain.connect(osc.detune);
   osc.connect(filt);
   osc.start(time); osc.stop(time+d+0.05);
@@ -172,14 +183,12 @@ function scheduleViolin(ctx, dest, freq, time, dur){
   bowSrc.start(time); bowSrc.stop(time+0.03);
 }
 
-// ADIÇÃO v1.1 — saxophone: onda quadrada rica em ímpares + filtro em
-// formante fixo (simula a ressonância do corpo do sax) + leve breath noise.
 function scheduleSaxophone(ctx, dest, freq, time, dur){
-  const d = Math.max(dur, 0.2);
+  const d = Math.max(dur, 0.06); // era 0.2
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, time);
-  g.gain.linearRampToValueAtTime(0.28, time+0.03);
-  g.gain.setValueAtTime(0.28, time+Math.max(d*0.8,0.05));
+  g.gain.linearRampToValueAtTime(0.28, time+Math.min(0.03, d*0.3));
+  g.gain.setValueAtTime(0.28, time+Math.max(d*0.8,0.03));
   g.gain.linearRampToValueAtTime(0.0001, time+d);
 
   const formant = ctx.createBiquadFilter();
@@ -199,14 +208,12 @@ function scheduleSaxophone(ctx, dest, freq, time, dur){
   breathSrc.start(time); breathSrc.stop(time+d);
 }
 
-// ADIÇÃO v1.1 — trumpet: onda quadrada brilhante, ataque rápido e firme,
-// leve "brassy buzz" (segundo oscilador dessintonizado no ataque).
 function scheduleTrumpet(ctx, dest, freq, time, dur){
-  const d = Math.max(dur, 0.15);
+  const d = Math.max(dur, 0.05); // era 0.15
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, time);
-  g.gain.linearRampToValueAtTime(0.3, time+0.012); // ataque bem rápido
-  g.gain.setValueAtTime(0.3, time+Math.max(d*0.75,0.04));
+  g.gain.linearRampToValueAtTime(0.3, time+Math.min(0.012, d*0.3));
+  g.gain.setValueAtTime(0.3, time+Math.max(d*0.75,0.03));
   g.gain.linearRampToValueAtTime(0.0001, time+d);
   const filt = ctx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value = freq*8;
   filt.connect(g); g.connect(dest);
@@ -219,15 +226,17 @@ function scheduleTrumpet(ctx, dest, freq, time, dur){
   buzz.frequency.setValueAtTime(freq, time); buzz.detune.setValueAtTime(9, time);
   const buzzGain = ctx.createGain();
   buzzGain.gain.setValueAtTime(0.12, time);
-  buzzGain.gain.exponentialRampToValueAtTime(0.001, time+0.06);
+  buzzGain.gain.exponentialRampToValueAtTime(0.001, time+Math.min(0.06, d));
   buzz.connect(filt); buzz.connect(buzzGain); buzzGain.connect(g);
-  buzz.start(time); buzz.stop(time+0.06);
+  buzz.start(time); buzz.stop(time+Math.min(0.06, d));
 }
 
-// ADIÇÃO v1.1 — vibraphone: harmônicos metálicos com decaimento longo +
-// trêmulo (LFO em amplitude) característico do motor do vibrafone.
 function scheduleVibraphone(ctx, dest, freq, time, dur){
-  const d = Math.max(dur, 1.2);
+  // Mantém um piso um pouco maior que os demais de propósito: vibrafone é
+  // uma barra metálica que fisicamente NÃO consegue ser abafada tão rápido
+  // quanto uma corda dedilhada — mas 0.15s (não 1.2s) já respeita bem
+  // staccato/portato sem descaracterizar o instrumento.
+  const d = Math.max(dur, 0.15);
   const master = ctx.createGain();
   master.gain.setValueAtTime(0.0001, time);
   master.gain.exponentialRampToValueAtTime(0.3, time+0.005);
@@ -241,7 +250,6 @@ function scheduleVibraphone(ctx, dest, freq, time, dur){
   tremolo.connect(master);
   lfo.start(time); lfo.stop(time+d+0.05);
 
-  // Harmônicos ligeiramente inarmônicos (típico de barras metálicas).
   [1, 3.9, 9.2].forEach((mult, idx)=>{
     const osc = ctx.createOscillator(); osc.type='sine';
     osc.frequency.setValueAtTime(freq*mult, time);
@@ -255,14 +263,12 @@ function scheduleVibraphone(ctx, dest, freq, time, dur){
   });
 }
 
-// ADIÇÃO v1.1 — choir: pilha de osciladores dessintonizados (vogal "ah"
-// aproximada com dois formantes) simulando várias vozes cantando junto.
 function scheduleChoir(ctx, dest, freq, time, dur){
-  const d = Math.max(dur, 0.3);
+  const d = Math.max(dur, 0.08); // era 0.3
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, time);
-  g.gain.linearRampToValueAtTime(0.22, time+0.08);
-  g.gain.setValueAtTime(0.22, time+Math.max(d*0.75,0.1));
+  g.gain.linearRampToValueAtTime(0.22, time+Math.min(0.08, d*0.3));
+  g.gain.setValueAtTime(0.22, time+Math.max(d*0.75,0.05));
   g.gain.linearRampToValueAtTime(0.0001, time+d);
 
   const formant1 = ctx.createBiquadFilter(); formant1.type='bandpass'; formant1.frequency.value=800; formant1.Q.value=4;
@@ -279,17 +285,15 @@ function scheduleChoir(ctx, dest, freq, time, dur){
   });
 }
 
-// ADIÇÃO v1.1 — whistle (assobio): senoidal pura com leve vibrato e
-// pequeno "portamento" de entrada (o som sobe rapidamente até a nota).
 function scheduleWhistle(ctx, dest, freq, time, dur){
-  const d = Math.max(dur, 0.15);
+  const d = Math.max(dur, 0.05); // era 0.15
   const g = ctx.createGain();
   g.gain.setValueAtTime(0.0001, time);
-  g.gain.linearRampToValueAtTime(0.25, time+0.02);
+  g.gain.linearRampToValueAtTime(0.25, time+Math.min(0.02, d*0.3));
   g.gain.exponentialRampToValueAtTime(0.0006, time+d);
   const osc = ctx.createOscillator(); osc.type='sine';
   osc.frequency.setValueAtTime(freq*0.85, time);
-  osc.frequency.exponentialRampToValueAtTime(freq, time+0.04); // portamento de entrada
+  osc.frequency.exponentialRampToValueAtTime(freq, time+Math.min(0.04, d*0.5));
 
   const lfo = ctx.createOscillator(); lfo.frequency.value = 6.5;
   const lfoGain = ctx.createGain(); lfoGain.gain.value = 4;
@@ -300,33 +304,43 @@ function scheduleWhistle(ctx, dest, freq, time, dur){
   lfo.start(time); lfo.stop(time+d+0.05);
 }
 
-function scheduleNote(ctx, dest, freq, time, dur, instrument){
+// scheduleNote agora aceita 'accent' (opcional, padrão 1). Quando != 1,
+// insere um GainNode extra ANTES do destino real, multiplicando o volume
+// só desta nota — é assim que marcato ganha ênfase sem duplicar síntese.
+function scheduleNote(ctx, dest, freq, time, dur, instrument, accent){
   try{
     if(!isFinite(freq) || freq<=0) return;
+    let target = dest;
+    if(accent !== undefined && accent !== null && accent !== 1){
+      const accentGain = ctx.createGain();
+      accentGain.gain.value = accent;
+      accentGain.connect(dest);
+      target = accentGain;
+    }
     switch(instrument){
       case 'piano':
-        pluckedTone(ctx, dest, freq, time, dur, { harmonics:[1,2,3,4,5,6,8], ampWeights:[1,0.5,0.3,0.22,0.14,0.09,0.05], spread:1.3, decay:Math.max(dur,1.1), attack:0.006, gain:0.5, inharm:0.00018, filterStart:freq*9, filterEnd:freq*1.8, filterQ:0.5 });
+        pluckedTone(ctx, target, freq, time, dur, { harmonics:[1,2,3,4,5,6,8], ampWeights:[1,0.5,0.3,0.22,0.14,0.09,0.05], spread:1.3, decay:dur, attack:0.006, gain:0.5, inharm:0.00018, filterStart:freq*9, filterEnd:freq*1.8, filterQ:0.5 });
         break;
       case 'guitar':
-        pluckedTone(ctx, dest, freq, time, dur, { harmonics:[1,2,3,4,5,7], ampWeights:[1,0.65,0.42,0.26,0.16,0.09], spread:2.0, decay:Math.max(dur,0.55), attack:0.003, gain:0.45, inharm:0.00006, filterStart:freq*15, filterEnd:freq*3.5, filterQ:0.7 });
+        pluckedTone(ctx, target, freq, time, dur, { harmonics:[1,2,3,4,5,7], ampWeights:[1,0.65,0.42,0.26,0.16,0.09], spread:2.0, decay:dur, attack:0.003, gain:0.45, inharm:0.00006, filterStart:freq*15, filterEnd:freq*3.5, filterQ:0.7 });
         break;
       case 'guitarBass':
-        pluckedTone(ctx, dest, freq/2, time, dur, { harmonics:[1,2,3,4], ampWeights:[1,0.4,0.2,0.1], spread:0.9, decay:Math.max(dur,1.0), attack:0.01, gain:0.62, inharm:0, filterStart:(freq/2)*5, filterEnd:(freq/2)*1.3, filterQ:0.5 });
+        pluckedTone(ctx, target, freq/2, time, dur, { harmonics:[1,2,3,4], ampWeights:[1,0.4,0.2,0.1], spread:0.9, decay:dur, attack:0.01, gain:0.62, inharm:0, filterStart:(freq/2)*5, filterEnd:(freq/2)*1.3, filterQ:0.5 });
         break;
       case 'ukulele':
-        pluckedTone(ctx, dest, freq*1.5, time, dur*0.7, { harmonics:[1,2,3,4,5], ampWeights:[1,0.45,0.24,0.14,0.07], spread:2.8, decay:Math.max(dur*0.55,0.28), attack:0.002, gain:0.4, inharm:0, filterStart:freq*20, filterEnd:freq*5, filterQ:0.6 });
+        pluckedTone(ctx, target, freq*1.5, time, dur*0.7, { harmonics:[1,2,3,4,5], ampWeights:[1,0.45,0.24,0.14,0.07], spread:2.8, decay:dur*0.6, attack:0.002, gain:0.4, inharm:0, filterStart:freq*20, filterEnd:freq*5, filterQ:0.6 });
         break;
-      case 'synthBass': scheduleSynthBass(ctx, dest, freq, time, dur); break;
-      case 'synth':     scheduleSynth(ctx, dest, freq, time, dur); break;
-      case 'organ':     scheduleOrgan(ctx, dest, freq, time, dur); break;
-      case 'accordeon': scheduleAccordeon(ctx, dest, freq, time, dur); break;
-      case 'violin':    scheduleViolin(ctx, dest, freq, time, dur); break;
-      case 'saxophone': scheduleSaxophone(ctx, dest, freq, time, dur); break;
-      case 'trumpet':   scheduleTrumpet(ctx, dest, freq, time, dur); break;
-      case 'vibraphone':scheduleVibraphone(ctx, dest, freq, time, dur); break;
-      case 'choir':     scheduleChoir(ctx, dest, freq, time, dur); break;
-      case 'whistle':   scheduleWhistle(ctx, dest, freq, time, dur); break;
-      default: scheduleSynth(ctx, dest, freq, time, dur);
+      case 'synthBass': scheduleSynthBass(ctx, target, freq, time, dur); break;
+      case 'synth':     scheduleSynth(ctx, target, freq, time, dur); break;
+      case 'organ':     scheduleOrgan(ctx, target, freq, time, dur); break;
+      case 'accordeon': scheduleAccordeon(ctx, target, freq, time, dur); break;
+      case 'violin':    scheduleViolin(ctx, target, freq, time, dur); break;
+      case 'saxophone': scheduleSaxophone(ctx, target, freq, time, dur); break;
+      case 'trumpet':   scheduleTrumpet(ctx, target, freq, time, dur); break;
+      case 'vibraphone':scheduleVibraphone(ctx, target, freq, time, dur); break;
+      case 'choir':     scheduleChoir(ctx, target, freq, time, dur); break;
+      case 'whistle':   scheduleWhistle(ctx, target, freq, time, dur); break;
+      default: scheduleSynth(ctx, target, freq, time, dur);
     }
   }catch(e){}
-     }
+}
