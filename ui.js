@@ -1,6 +1,11 @@
 /* ================= PlayComputer v1.1 — ui.js =================
    Renderização de canais, status, player ao vivo (playSchedule) e
    listeners dos botões Tocar/Parar/Baixar.
+
+   CORREÇÃO NESTA REVISÃO: as chamadas a scheduleNote agora repassam
+   ev.accent — sem isso, o parâmetro que synth-instruments.js passou a
+   aceitar nunca chegaria até lá, e marcato continuaria sem ênfase mesmo
+   com a lógica corrigida nos outros arquivos.
    Depende de: scheduler.js, synth-instruments.js, synth-drum.js,
    synth-effects.js.
    ========================================================================= */
@@ -75,8 +80,9 @@ function playSchedule(schedule, state){
         applyChannelFade(audioCtx, volGain, startAt, evs[0].totalChannelSpan, part.fadeIn, part.fadeOut, part.volume!==undefined?part.volume:1);
       }
       evs.forEach(ev=>{
-        if(ev.type==='note') scheduleNote(audioCtx, chain.input, ev.freq, startAt+ev.time, ev.duration, ev.instrument);
-        else if(ev.type==='chord') ev.freqs.forEach(f=>scheduleNote(audioCtx, chain.input, f, startAt+ev.time, ev.duration, ev.instrument));
+        // CORREÇÃO: ev.accent repassado em todas as chamadas de scheduleNote.
+        if(ev.type==='note') scheduleNote(audioCtx, chain.input, ev.freq, startAt+ev.time, ev.duration, ev.instrument, ev.accent);
+        else if(ev.type==='chord') ev.freqs.forEach(f=>scheduleNote(audioCtx, chain.input, f, startAt+ev.time, ev.duration, ev.instrument, ev.accent));
         else if(ev.type==='drum') scheduleDrum(audioCtx, chain.input, ev.drumType, startAt+ev.time, ev.duration);
 
         const tid = setTimeout(()=>highlightChannel(channelId, ev.duration*1000), Math.max(0,ev.time)*1000);
