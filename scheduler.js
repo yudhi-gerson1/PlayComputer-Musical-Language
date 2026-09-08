@@ -1,9 +1,37 @@
 /* ================= PlayComputer v1.1 — scheduler.js =================
    Converte o resultado do compile() em uma timeline plana de eventos com
    tempo absoluto, aplicando: repeat/tone acumulado por iteração, escape,
-   articulação (gate time), speed por canal e fade in/out.
+   articulação (gate time + ênfase), speed por canal e fade in/out.
    Depende de: parser-play.js (estruturas de 'parts'/'groupInstances').
+
+   CORREÇÃO NESTA REVISÃO:
+   - Os gate times estavam muito próximos entre si (0.90 a 1.05), então a
+     diferença entre articulações praticamente não se notava — isso foi
+     mascarado ainda mais pelos pisos de decaimento fixos que existiam em
+     synth-instruments.js (corrigidos separadamente naquele arquivo).
+   - marcato não tinha nenhuma característica própria (usava o mesmo gate
+     do normal) — agora ele mantém a duração do normal, mas ganha ênfase
+     de volume no ataque (ARTICULATION_ACCENT), que é como marcato
+     realmente se diferencia na prática (acento forte, não duração).
    ========================================================================= */
+
+// Gate time (proporção da duração do ritmo que efetivamente soa) por
+// articulação. Valores mais afastados entre si do que antes, para que a
+// diferença seja perceptível mesmo com os pisos de decaimento reduzidos.
+const ARTICULATION_GATE = {
+  staccato: 0.45,  // nota bem curta, pausa grande depois
+  portato:  0.70,  // meio-termo: curto, mas não tanto quanto staccato
+  normal:   0.88,
+  marcato:  0.88,  // mesma duração do normal — a diferença é o ACENTO (abaixo)
+  legato:   1.05,  // levemente mais longa que o ritmo pedido, cobre o gap
+  tenuto:   1.12   // "segura até o limite", ainda mais que legato
+};
+
+// ADIÇÃO: fator de ganho aplicado só no início da nota, para articulações
+// que precisam de ênfase em vez de (ou além de) mudança de duração.
+const ARTICULATION_ACCENT = {
+  marcato: 1.35
+};
 
 function buildSchedule(compiled){
   const {state, parts, groupInstances} = compiled;
@@ -11,7 +39,8 @@ function buildSchedule(compiled){
 
   function emitPartEvents(part, baseStart, toneFactor){
     toneFactor = toneFactor || 1;
-    const gate = ARTICULATION_GATE[part.articul] !== undefined ? ARTICULATION_GATE[part.articul] : 0.9;
+    const gate = ARTICULATION_GATE[part.articul] !== undefined ? ARTICULATION_GATE[part.articul] : 0.88;
+    const accent = ARTICULATION_ACCENT[part.articul] || 1;
     const speed = part.speedFactor || 1; // >1 = mais rápido (durações menores)
     let t = baseStart;
     part.events.forEach(ev=>{
@@ -23,6 +52,7 @@ function buildSchedule(compiled){
             time: t, duration: soundSeconds, channelId: part.id,
             instrument: part.instrument, effectType: part.type,
             volume: part.volume, fadeIn: part.fadeIn, fadeOut: part.fadeOut,
+            accent, // NOVO — repassado até scheduleNote/scheduleDrum
             totalChannelSpan: null // preenchido depois, para o fade proporcional
           };
           if(part.instrument==='drum'){
@@ -81,4 +111,4 @@ function buildSchedule(compiled){
   }
 
   return {events, totalDuration, parts, state};
-                 }
+}
