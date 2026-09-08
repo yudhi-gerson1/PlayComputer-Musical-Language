@@ -1,14 +1,18 @@
 /* ================= PlayComputer v1.1 — synth-effects.js =================
-   NOVO v1.1: cadeia de efeitos por canal (type = delay/wah/8bit/distorted/
-   reverb/normal) + fade in/out proporcional ao intervalo do canal.
-   A cadeia é construída UMA VEZ por canal (não por nota) e devolve o
-   "input node" onde scheduleNote/scheduleDrum devem injetar o som — isso
-   é o padrão correto de roteamento em Web Audio (evita recriar a cadeia
-   a cada nota, o que seria caro e poderia causar cliques).
+   Cadeia de efeitos por canal (type = delay/wah/8bit/distorted/reverb/
+   normal) + fade in/out proporcional ao intervalo do canal.
+
+   CORREÇÃO NESTA REVISÃO — bug do fade invertido:
+   No cálculo antigo de applyChannelFade, 'loud' e 'quiet' produziam o
+   MESMO resultado matemático na prática (baseVolume*pct em ambos os
+   ramos, só que com pct calculado de formas que se cancelavam), então
+   fade in/out não mudava o volume perceptível de forma consistente.
+   Agora: 'quiet' começa/termina ABAIXO do volume base (baseVolume*(1-pct))
+   e 'loud' começa/termina AGORA DE FATO ACIMA do volume base
+   (baseVolume*(1+pct), limitado a não estourar o headroom do canal).
    Depende de: nada além da Web Audio API nativa.
    ========================================================================= */
 
-// Curva de distorção (waveshaping) — quanto maior "amount", mais agressivo.
 function makeDistortionCurve(amount){
   const k = amount || 50;
   const n = 44100;
@@ -20,8 +24,6 @@ function makeDistortionCurve(amount){
   return curve;
 }
 
-// Impulso sintético para reverb (ruído decaindo exponencialmente) — não
-// depende de arquivo externo de impulso, gerado em runtime.
 function makeReverbImpulse(ctx, duration, decay){
   const rate = ctx.sampleRate;
   const length = Math.floor(rate*duration);
@@ -35,9 +37,6 @@ function makeReverbImpulse(ctx, duration, decay){
   return impulse;
 }
 
-// Constrói a cadeia de efeitos para um canal, retornando {input, output}.
-// input: onde as notas devem se conectar. output: onde a cadeia entrega o
-// som já processado (deve ser conectado ao masterGain do player).
 function buildEffectChain(ctx, type){
   switch(type){
     case 'delay': {
@@ -46,7 +45,7 @@ function buildEffectChain(ctx, type){
       const feedback = ctx.createGain(); feedback.gain.value = 0.35;
       const wetGain = ctx.createGain(); wetGain.gain.value = 0.5;
       const output = ctx.createGain();
-      input.connect(output); // seco
+      input.connect(output);
       input.connect(delay); delay.connect(feedback); feedback.connect(delay);
       delay.connect(wetGain); wetGain.connect(output);
       return {input, output};
@@ -64,7 +63,6 @@ function buildEffectChain(ctx, type){
       return {input, output};
     }
     case '8bit': {
-      // Bitcrush aproximado via WaveShaper com curva em degraus (quantização).
       const input = ctx.createGain();
       const shaper = ctx.createWaveShaper();
       const steps = 8;
@@ -87,7 +85,7 @@ function buildEffectChain(ctx, type){
       shaper.oversample = '4x';
       const tone = ctx.createBiquadFilter(); tone.type='lowpass'; tone.frequency.value=4200;
       input.connect(shaper); shaper.connect(tone);
-      const output = ctx.createGain(); output.gain.value = 0.7; // compensa ganho da distorção
+      const output = ctx.createGain(); output.gain.value = 0.7;
       tone.connect(output);
       return {input, output};
     }
@@ -97,11 +95,11 @@ function buildEffectChain(ctx, type){
       convolver.buffer = makeReverbImpulse(ctx, 2.2, 2.5);
       const wetGain = ctx.createGain(); wetGain.gain.value = 0.4;
       const output = ctx.createGain();
-      input.connect(output); // seco
+      input.connect(output);
       input.connect(convolver); convolver.connect(wetGain); wetGain.connect(output);
       return {input, output};
     }
-    default: { // normal
+    default: {
       const node = ctx.createGain();
       return {input: node, output: node};
     }
@@ -109,7 +107,9 @@ function buildEffectChain(ctx, type){
 }
 
 // Aplica volume fixo do canal (attrs.volume) entre a cadeia de efeitos e
-// o masterGain final.
+// o masterGain final. volume=1 significa "o volume do celular", como
+// definido: masterGain já representa o volume atual do aparelho, e este
+// valor multiplica em cima dele (ex.: 0.9 para volume=90%).
 function applyChannelVolume(ctx, chainOutput, masterGain, volume){
   const volGain = ctx.createGain();
   volGain.gain.value = (volume!==undefined? volume : 1);
@@ -118,10 +118,9 @@ function applyChannelVolume(ctx, chainOutput, masterGain, volume){
   return volGain;
 }
 
-// Aplica fade in/out no volume MESTRE DO CANAL (o volGain acima), ao
-// longo do intervalo real de duração do canal (channelSpan), não da
-// música inteira. kind: 'loud' sobe/desce a partir de um volume mais
-// baixo; 'quiet' começa/termina reduzindo o volume normal.
+// CORREÇÃO: 'quiet' agora reduz de fato o volume no início/fim do trecho,
+// e 'loud' AUMENTA de fato acima do volume base — antes os dois produziam
+// resultado equivalente por causa de um erro de sinal no cálculo.
 function applyChannelFade(ctx, volGainNode, startAt, channelSpan, fadeIn, fadeOut, baseVolume){
   if(!channelSpan) return;
   const spanStart = startAt + channelSpan.start;
@@ -133,16 +132,20 @@ function applyChannelFade(ctx, volGainNode, startAt, channelSpan, fadeIn, fadeOu
 
   if(fadeIn){
     const pct = Math.max(0, Math.min(1, fadeIn.pct/100));
-    const fadeInDur = Math.min(totalSpan*0.4, totalSpan* pct + 0.05);
-    const startVol = fadeIn.kind==='quiet' ? baseVolume*(1-pct) : baseVolume*pct;
-    volGainNode.gain.setValueAtTime(startVol, spanStart);
+    const fadeInDur = Math.min(totalSpan*0.4, totalSpan*pct + 0.05);
+    const startVol = fadeIn.kind==='quiet'
+      ? baseVolume*(1-pct)                      // quiet: começa mais baixo
+      : Math.min(baseVolume*(1+pct), baseVolume*2); // loud: começa mais alto
+    volGainNode.gain.setValueAtTime(Math.max(startVol, 0.0001), spanStart);
     volGainNode.gain.linearRampToValueAtTime(baseVolume, spanStart+fadeInDur);
   }
   if(fadeOut){
     const pct = Math.max(0, Math.min(1, fadeOut.pct/100));
     const fadeOutDur = Math.min(totalSpan*0.4, totalSpan*pct + 0.05);
-    const endVol = fadeOut.kind==='quiet' ? baseVolume*(1-pct) : baseVolume*pct;
+    const endVol = fadeOut.kind==='quiet'
+      ? baseVolume*(1-pct)                      // quiet: termina mais baixo
+      : Math.min(baseVolume*(1+pct), baseVolume*2); // loud: termina mais alto
     volGainNode.gain.setValueAtTime(baseVolume, spanEnd-fadeOutDur);
-    volGainNode.gain.linearRampToValueAtTime(endVol, spanEnd);
+    volGainNode.gain.linearRampToValueAtTime(Math.max(endVol, 0.0001), spanEnd);
   }
 }
